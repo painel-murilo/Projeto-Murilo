@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>OuvixPro — Painel</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f0f13;
+  --card:#16161c;
+  --card2:#1c1c24;
+  --border:rgba(255,255,255,0.06);
+  --border2:rgba(255,255,255,0.12);
+  --text:#eeeae0;
+  --muted:#5a5860;
+  --muted2:#3a3840;
+  --lime:#c6f135;
+  --blue:#4db8ff;
+  --orange:#ff9f45;
+  --purple:#b794f4;
+  --red:#ff6b6b;
+  --green:#4ade80;
+  --sans:'Space Grotesk',sans-serif;
+  --mono:'Space Mono',monospace;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden}
+
+/* ── TOPO ── */
+.topbar{
+  display:flex;align-items:center;gap:16px;
+  padding:20px 28px;
+  border-bottom:1px solid var(--border);
+}
+.logo{font-family:var(--mono);font-size:12px;letter-spacing:.14em;color:var(--muted)}
+.logo b{color:var(--lime)}
+.topbar-date{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:auto}
+.topbar-greeting{font-size:14px;font-weight:600;color:var(--text)}
+
+/* ── LAYOUT ── */
+.wrap{display:grid;grid-template-columns:1fr 340px;min-height:calc(100vh - 65px)}
+.left{padding:24px 28px;border-right:1px solid var(--border)}
+.right{padding:24px 24px;display:flex;flex-direction:column;gap:20px}
+
+/* ── HERO META ── */
+.hero{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:28px;
+  margin-bottom:20px;
+  position:relative;
+  overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;top:-60px;right:-60px;
+  width:220px;height:220px;border-radius:50%;
+  background:radial-gradient(circle,rgba(198,241,53,.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+.hero-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px}
+.hero-label{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.1em;margin-bottom:6px}
+.hero-pts{font-size:56px;font-weight:700;line-height:1;color:var(--lime);letter-spacing:-2px}
+.hero-total{font-size:20px;color:var(--muted);font-weight:400}
+.hero-right{text-align:right}
+.hero-pct{font-size:42px;font-weight:700;color:var(--text)}
+.hero-pct-label{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.hero-bar-wrap{background:var(--card2);border-radius:99px;height:8px;overflow:hidden;margin-bottom:8px}
+.hero-bar{height:100%;border-radius:99px;background:var(--lime);transition:width .8s cubic-bezier(.4,0,.2,1)}
+.hero-sub{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.hero-dias{
+  display:inline-block;
+  background:rgba(198,241,53,.1);
+  border:1px solid rgba(198,241,53,.2);
+  color:var(--lime);
+  font-family:var(--mono);font-size:11px;
+  padding:4px 12px;border-radius:99px;margin-top:12px;
+}
+
+/* ── MÉTRICAS ONTEM ── */
+.section-label{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.1em;margin-bottom:12px}
+.metrics-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px}
+.mcard{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:14px 12px;cursor:default;transition:border .15s;
+}
+.mcard:hover{border-color:var(--border2)}
+.mcard-label{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.06em;margin-bottom:8px;line-height:1.4}
+.mcard-val{font-size:28px;font-weight:700;line-height:1}
+.mcard-meta{font-family:var(--mono);font-size:9px;color:var(--muted2);margin-top:4px}
+.ok{color:var(--green)}
+.warn{color:var(--orange)}
+.neutral{color:var(--text)}
+
+/* ── CHECKLIST ── */
+.tasks-wrap{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px}
+.tasks-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.tasks-title{font-size:15px;font-weight:600}
+.tasks-prog{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.task{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:12px 0;border-bottom:1px solid var(--border);
+  cursor:pointer;transition:opacity .1s;
+}
+.task:last-child{border-bottom:none}
+.task:hover{opacity:.8}
+.tcheck{
+  width:20px;height:20px;flex-shrink:0;margin-top:1px;
+  border-radius:6px;border:1px solid var(--border2);
+  background:transparent;display:flex;align-items:center;justify-content:center;
+  transition:all .15s;
+}
+.tcheck.done{background:var(--lime);border-color:var(--lime)}
+.tcheck.done::after{
+  content:'';display:block;
+  width:10px;height:6px;
+  border-left:2px solid #0f0f13;border-bottom:2px solid #0f0f13;
+  transform:rotate(-45deg) translateY(-1px);
+}
+.ttext{font-size:13px;color:var(--text);line-height:1.5;flex:1;transition:color .1s}
+.ttext.done{text-decoration:line-through;color:var(--muted)}
+.ttag{
+  font-family:var(--mono);font-size:9px;letter-spacing:.04em;
+  padding:3px 9px;border-radius:99px;border:1px solid;flex-shrink:0;
+  margin-top:2px;
+}
+
+/* ── GRÁFICO ── */
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px}
+.chart-bars-row{display:flex;align-items:flex-end;gap:5px;height:80px;margin-top:10px}
+.bar-col{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1}
+.bar-fill{width:100%;border-radius:4px 4px 0 0;min-height:3px;transition:height .5s cubic-bezier(.4,0,.2,1)}
+.bar-date{font-family:var(--mono);font-size:8px;color:var(--muted)}
+.bar-pts{font-family:var(--mono);font-size:8px;color:var(--muted)}
+.empty-chart{font-family:var(--mono);font-size:11px;color:var(--muted2);text-align:center;padding:20px 0}
+
+/* ── REGISTRO (sidebar direita) ── */
+.reg-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px}
+.reg-title{font-size:15px;font-weight:600;margin-bottom:4px}
+.reg-sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}
+.reg-date-row{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.reg-date-label{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.reg-date-val{font-family:var(--mono);font-size:11px;color:var(--blue);background:rgba(77,184,255,.1);border:1px solid rgba(77,184,255,.2);padding:3px 10px;border-radius:99px}
+.field{margin-bottom:12px}
+.field-label{
+  display:flex;align-items:center;gap:6px;
+  font-size:12px;color:var(--muted);margin-bottom:5px;
+}
+.field-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.field input{
+  width:100%;
+  background:var(--card2);
+  border:1px solid var(--border);
+  border-radius:8px;
+  color:var(--text);
+  font-family:var(--mono);
+  font-size:15px;font-weight:700;
+  padding:10px 12px;
+  outline:none;
+  transition:border .15s;
+}
+.field input:focus{border-color:var(--border2)}
+.field input::placeholder{font-weight:400;font-size:13px;color:var(--muted2)}
+.btn-save{
+  width:100%;margin-top:4px;
+  background:var(--lime);color:#0f0f13;
+  border:none;border-radius:10px;
+  font-family:var(--sans);font-weight:700;font-size:14px;
+  padding:13px;cursor:pointer;letter-spacing:.02em;
+  transition:opacity .15s,transform .1s;
+}
+.btn-save:hover{opacity:.9}
+.btn-save:active{transform:scale(.98)}
+.save-feedback{
+  text-align:center;font-family:var(--mono);font-size:11px;
+  color:var(--green);margin-top:8px;
+  opacity:0;transition:opacity .3s;
+}
+.save-feedback.show{opacity:1}
+
+/* ── HISTÓRICO ── */
+.hist-scroll{max-height:200px;overflow-y:auto}
+.hist-row{
+  display:flex;align-items:center;gap:0;
+  padding:9px 0;border-bottom:1px solid var(--border);
+  font-family:var(--mono);font-size:11px;
+}
+.hist-row:last-child{border-bottom:none}
+.hist-date{color:var(--muted);width:70px;flex-shrink:0}
+.hist-pts{color:var(--lime);font-weight:700;width:42px}
+.hist-chip{
+  display:flex;gap:5px;flex-wrap:wrap;
+}
+.hchip{
+  font-size:9px;padding:1px 6px;border-radius:99px;
+  background:var(--card2);color:var(--muted);border:1px solid var(--border);
+}
+.hist-empty{font-family:var(--mono);font-size:11px;color:var(--muted2);padding:12px 0}
+
+/* ── ROTINA ── */
+.rotina-item{display:flex;gap:12px;padding:12px;background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;transition:all .15s}
+.rotina-item.done{opacity:.55;background:var(--card2)}
+.rotina-check{width:24px;height:24px;border-radius:6px;border:1.5px solid var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;transition:all .15s}
+.rotina-item.done .rotina-check{background:var(--lime);border-color:var(--lime)}
+.rotina-check span{font-size:12px;color:#000;font-weight:700}
+.rotina-body{flex:1;min-width:0}
+.rotina-label{font-size:13px;font-weight:600;margin-bottom:6px}
+.rotina-input-row{display:flex;align-items:center;gap:6px}
+.rotina-input{background:var(--card2);border:1px solid var(--border2);border-radius:6px;padding:5px 8px;color:var(--text);font-size:12px;font-family:var(--mono);width:90px}
+.rotina-input:focus{outline:none;border-color:var(--lime)}
+.rotina-unit{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.resumo-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:6px 0;border-bottom:1px solid var(--border)}
+.resumo-row:last-child{border-bottom:none}
+.resumo-label{color:var(--muted2)}
+.resumo-val{font-family:var(--mono);font-weight:700}
+
+/* ── CANAIS TAB ── */
+.canais-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+.canal-c{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
+.canal-h{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.canal-dot2{width:8px;height:8px;border-radius:50%}
+.canal-name{font-size:13px;font-weight:600;flex:1}
+.canal-status{font-family:var(--mono);font-size:9px;padding:2px 8px;border-radius:99px}
+.canal-item2{font-size:11px;color:var(--muted);padding:3px 0;border-bottom:1px solid var(--border)}
+.canal-item2:last-child{border-bottom:none}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:2px;margin-bottom:20px;background:var(--card);border-radius:10px;padding:4px;border:1px solid var(--border)}
+.tab{flex:1;font-family:var(--mono);font-size:11px;letter-spacing:.05em;padding:8px;border:none;background:transparent;color:var(--muted);cursor:pointer;border-radius:7px;transition:all .15s}
+.tab:hover{color:var(--text)}
+.tab.active{background:var(--card2);color:var(--text);border:1px solid var(--border2)}
+.tabp{display:none}
+.tabp.active{display:block}
+
+/* ── JM INFOPRODUTOS ── */
+.prod-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px}
+.prod-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px}
+.prod-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.prod-name{font-size:15px;font-weight:700;line-height:1.3}
+.prod-comissao{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px}
+.prod-badge{margin-left:auto;font-family:var(--mono);font-size:9px;padding:3px 10px;border-radius:99px;white-space:nowrap}
+.prod-checklist{display:flex;flex-direction:column;gap:6px}
+.prod-check-item{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--card2);border-radius:8px;cursor:pointer;border:1px solid transparent;transition:all .15s;font-size:12px}
+.prod-check-item:hover{border-color:var(--border2)}
+.prod-check-item.done{opacity:.5}
+.prod-check-box{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--muted);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all .15s}
+.prod-check-item.done .prod-check-box{background:var(--lime);border-color:var(--lime);color:#000}
+.prod-progress{height:3px;background:var(--card2);border-radius:2px;margin:12px 0 4px;overflow:hidden}
+.prod-progress-fill{height:100%;background:var(--lime);border-radius:2px;transition:width .4s ease}
+.prod-prog-label{font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:12px}
+
+@media(max-width:960px){
+  .wrap{grid-template-columns:1fr}
+  .right{border-top:1px solid var(--border)}
+  .metrics-row{grid-template-columns:repeat(3,1fr)}
+  .canais-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">OUVIX<b>PRO</b></div>
+  <div class="topbar-greeting" id="greeting"></div>
+  <div style="display:flex;gap:6px;margin-left:auto;margin-right:16px">
+    <button class="tab active" id="btn-ouvix" onclick="switchCompany('ouvix')" style="font-size:10px;padding:6px 14px">OuvixPro</button>
+    <button class="tab" id="btn-jm" onclick="switchCompany('jm')" style="font-size:10px;padding:6px 14px">JM Infoprodutos</button>
+    <button class="tab" id="btn-kioto" onclick="switchCompany('kioto')" style="font-size:10px;padding:6px 14px">Kioto</button>
+    <button class="tab" id="btn-receitas" onclick="switchCompany('receitas')" style="font-size:10px;padding:6px 14px">💰 Receitas</button>
+  </div>
+  <div class="topbar-date" id="topbar-date"></div>
+  <div id="sync-status" style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-left:8px">⟳ Sincronizando...</div>
+</div>
+
+<div class="wrap">
+
+  <!-- ── ESQUERDA ── -->
+  <div class="left">
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('hoje',this)">Hoje</button>
+      <button class="tab" onclick="switchTab('canais',this)">Canais</button>
+    </div>
+
+    <div class="tabp active" id="tab-hoje">
+
+      <!-- HERO -->
+      <div class="hero">
+        <div class="hero-top">
+          <div>
+            <div class="hero-label">CLIENTES FECHADOS — ABRIL</div>
+            <div><span class="hero-pts" id="hero-pts">0</span><span class="hero-total"> / 80</span></div>
+          </div>
+          <div class="hero-right">
+            <div class="hero-pct" id="hero-pct">0%</div>
+            <div class="hero-pct-label">da meta</div>
+          </div>
+        </div>
+        <div class="hero-bar-wrap"><div class="hero-bar" id="hero-bar" style="width:0%"></div></div>
+        <div class="hero-sub" id="hero-sub">Faltam 80 pontos para bater a meta</div>
+        <div class="hero-dias" id="hero-dias">Registre o primeiro dia</div>
+      </div>
+
+      <!-- ROTINA DO DIA -->
+      <div class="tasks-wrap">
+        <div class="tasks-header">
+          <div class="tasks-title">Rotina de hoje</div>
+          <div class="tasks-prog" id="tasks-prog">0 / 8</div>
+        </div>
+
+        <!-- COMERCIAL -->
+        <div class="section-label" style="margin:16px 0 8px">🟦 COMERCIAL</div>
+
+        <div class="rotina-item" id="ri-leads">
+          <div class="rotina-check" onclick="toggleRotina('leads')"><span id="rchk-leads"></span></div>
+          <div class="rotina-body">
+            <div class="rotina-label">Chamar leads do Facebook</div>
+            <div class="rotina-input-row">
+              <input type="number" class="rotina-input" id="rnum-leads" placeholder="Quantos chamou?" min="0" onchange="saveRotinaNum('leads', this.value)"/>
+              <span class="rotina-unit">pessoas</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="rotina-item" id="ri-demos">
+          <div class="rotina-check" onclick="toggleRotina('demos')"><span id="rchk-demos"></span></div>
+          <div class="rotina-body">
+            <div class="rotina-label">Confirmar / agendar demos</div>
+            <div class="rotina-input-row">
+              <input type="number" class="rotina-input" id="rnum-demos" placeholder="Quantas demos?" min="0" onchange="saveRotinaNum('demos', this.value)"/>
+              <span class="rotina-unit">demos agendadas</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="rotina-item" id="ri-indicacao">
+          <div class="rotina-check" onclick="toggleRotina('indicacao')"><span id="rchk-indicacao"></span></div>
+          <div class="rotina-body">
+            <div class="rotina-label">Pedir 1 indicação a um cliente ativo</div>
+          </div>
+        </div>
+
+        <div class="rotina-item" id="ri-cpl">
+          <div class="rotina-check" onclick="toggleRotina('cpl')"><span id="rchk-cpl"></span></div>
+          <div class="rotina-body">
+            <div class="rotina-label">Checar CPL no Meta Ads</div>
+            <div class="rotina-input-row">
+              <span class="rotina-unit">R$</span>
+              <input type="number" class="rotina-input" id="rnum-cpl" placeholder="CPL hoje" min="0" step="0.01" onchange="saveRotinaNum('cpl', this.value)"/>
+              <span class="rotina-unit" id="cpl-status"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="rotina-item" id="ri-linkedin-post">
+          <div class="rotina-check" onclick="toggleRotina('linkedin-post')"><span id="rchk-linkedin-post"></span></div>
+          <div class="rotina-body">
+            <div class="rotina-label">Fazer 1 post no LinkedIn</div>
+          </div>
+        </div>
+
+        <div class="rotina-item" id="ri-linkedin-conexoes">
+          <div class="rotina-check" onclick="toggleRotina('linkedin-conexoes')"><span id="rchk-linkedin-conexoes"></span></div>
+          <div class="rotina-body">
+            <div class="rotina-label">25 novas conexões no LinkedIn</div>
+            <div class="rotina-input-row">
+              <input type="number" class="rotina-input" id="rnum-linkedin-conexoes" placeholder="Quantas conexões?" min="0" onchange="saveRotinaNum('linkedin-conexoes', this.value)"/>
+              <span class="rotina-unit">conexões</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- MARKETING -->
+        <div class="section-label" style="margin:20px 0 8px">🟩 MARKETING</div>
+
+        <div class="rotina-item" id="ri-conteudos">
+          <div class="rotina-check" onclick="toggleRotina('conteudos')"><span id="rchk-conteudos"></span></div>
+          <div class="rotina-body">
+            <div class="rotina-label">Criar 5 novos conteúdos</div>
+            <div class="rotina-input-row">
+              <input type="number" class="rotina-input" id="rnum-conteudos" placeholder="Quantos criou?" min="0" max="5" onchange="saveRotinaNum('conteudos', this.value)"/>
+              <span class="rotina-unit">/ 5 conteúdos</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="rotina-item" id="ri-engajamento">
+          <div class="rotina-check" onclick="toggleRotina('engajamento')"><span id="rchk-engajamento"></span></div>
+          <div class="rotina-body">
+            <div class="rotina-label">Responder comentários e engajar nas redes</div>
+          </div>
+        </div>
+
+        <!-- EXTRAS -->
+        <div class="section-label" style="margin:20px 0 8px">➕ EXTRAS DO DIA</div>
+        <div id="rotina-extras"></div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <input class="rotina-input" id="extra-input" placeholder="Adicionar tarefa extra..." style="flex:1;width:auto" onkeydown="if(event.key==='Enter')addExtra()"/>
+          <button onclick="addExtra()" style="background:var(--card2);border:1px solid var(--border2);border-radius:6px;padding:6px 12px;color:var(--text);font-size:12px;cursor:pointer">+ Add</button>
+        </div>
+
+      </div>
+
+      <!-- GRÁFICO -->
+      <div class="chart-card" style="margin-top:20px">
+        <div class="section-label" style="margin-bottom:0">HISTÓRICO — ÚLTIMOS DIAS</div>
+        <div class="chart-bars-row" id="chart-bars"></div>
+      </div>
+
+    </div><!-- /tab-hoje -->
+
+    <div class="tabp" id="tab-canais">
+      <div class="canais-grid">
+
+        <div class="canal-c">
+          <div class="canal-h">
+            <div class="canal-dot2" style="background:var(--blue)"></div>
+            <span class="canal-name">Facebook Ads</span>
+            <span class="canal-status" style="background:rgba(77,184,255,.1);color:var(--blue);border:1px solid rgba(77,184,255,.25)">Principal</span>
+          </div>
+          <div class="canal-item2">Subir orçamento para R$120/dia</div>
+          <div class="canal-item2">Criativo focado em dono, não atendente</div>
+          <div class="canal-item2">Qualificar no formulário: cargo do lead</div>
+          <div class="canal-item2" style="color:var(--muted2);font-size:10px;margin-top:4px">CPL meta &lt;R$15 · Leads meta &gt;4/dia</div>
+        </div>
+
+        <div class="canal-c">
+          <div class="canal-h">
+            <div class="canal-dot2" style="background:var(--lime)"></div>
+            <span class="canal-name">SDR com IA</span>
+            <span class="canal-status" style="background:rgba(198,241,53,.1);color:var(--lime);border:1px solid rgba(198,241,53,.25)">Ativo</span>
+          </div>
+          <div class="canal-item2">Focar em gestores de redes e franquias</div>
+          <div class="canal-item2">Assumir respostas no mesmo dia</div>
+          <div class="canal-item2">Refinar a mensagem inicial do SDR</div>
+          <div class="canal-item2" style="color:var(--muted2);font-size:10px;margin-top:4px">Respostas meta &gt;3 · Demos meta &gt;2/dia</div>
+        </div>
+
+        <div class="canal-c">
+          <div class="canal-h">
+            <div class="canal-dot2" style="background:var(--orange)"></div>
+            <span class="canal-name">Google Ads</span>
+            <span class="canal-status" style="background:rgba(255,159,69,.1);color:var(--orange);border:1px solid rgba(255,159,69,.25)">Iniciar</span>
+          </div>
+          <div class="canal-item2">Campanha com palavras de gestor/dono</div>
+          <div class="canal-item2">Começar com R$30–50/dia</div>
+          <div class="canal-item2">Landing page específica para conversão</div>
+          <div class="canal-item2" style="color:var(--muted2);font-size:10px;margin-top:4px">Acompanhar CPC e índice de qualidade</div>
+        </div>
+
+        <div class="canal-c">
+          <div class="canal-h">
+            <div class="canal-dot2" style="background:var(--purple)"></div>
+            <span class="canal-name">Indicação</span>
+            <span class="canal-status" style="background:rgba(183,148,244,.1);color:var(--purple);border:1px solid rgba(183,148,244,.25)">Explorar</span>
+          </div>
+          <div class="canal-item2">Contatar clientes satisfeitos esta semana</div>
+          <div class="canal-item2">Mensagem direta pedindo indicação</div>
+          <div class="canal-item2">Incentivo: desconto ou mês grátis</div>
+          <div class="canal-item2" style="color:var(--muted2);font-size:10px;margin-top:4px">Acompanhar indicações recebidas e convertidas</div>
+        </div>
+
+        <div class="canal-c">
+          <div class="canal-h">
+            <div class="canal-dot2" style="background:var(--red)"></div>
+            <span class="canal-name">Expansão de base</span>
+            <span class="canal-status" style="background:rgba(255,107,107,.1);color:var(--red);border:1px solid rgba(255,107,107,.25)">Explorar</span>
+          </div>
+          <div class="canal-item2">Mapear clientes com mais PDVs não ativados</div>
+          <div class="canal-item2">Abordar com proposta de expansão</div>
+          <div class="canal-item2">Mostrar valor já entregue até agora</div>
+          <div class="canal-item2" style="color:var(--muted2);font-size:10px;margin-top:4px">1 conversa pode valer vários pontos</div>
+        </div>
+
+        <div class="canal-c">
+          <div class="canal-h">
+            <div class="canal-dot2" style="background:var(--muted)"></div>
+            <span class="canal-name">Orgânico</span>
+            <span class="canal-status" style="background:rgba(90,88,96,.2);color:var(--muted);border:1px solid rgba(90,88,96,.4)">Ajustar</span>
+          </div>
+          <div class="canal-item2">Reposicionar pauta: falar com dono</div>
+          <div class="canal-item2">Mostrar casos reais com resultado</div>
+          <div class="canal-item2">CTA direto para WhatsApp / formulário</div>
+          <div class="canal-item2" style="color:var(--muted2);font-size:10px;margin-top:4px">Acompanhar cliques no CTA (semanal)</div>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /left -->
+
+  <!-- ── DIREITA ── -->
+  <div class="right">
+
+    <!-- RESUMO DO DIA -->
+    <div class="reg-card">
+      <div class="reg-title">Resumo de hoje</div>
+      <div class="reg-sub" id="resumo-data"></div>
+      <div style="margin:12px 0 4px;font-size:11px;color:var(--muted);font-family:var(--mono);letter-spacing:.05em">NOVO CLIENTE FECHADO</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <button onclick="addCliente(-1)" style="width:32px;height:32px;border-radius:6px;border:1px solid var(--border2);background:var(--card2);color:var(--text);font-size:18px;cursor:pointer;line-height:1">−</button>
+        <div style="flex:1;text-align:center;font-size:28px;font-weight:800;font-family:var(--mono)" id="clientes-hoje">0</div>
+        <button onclick="addCliente(1)" style="width:32px;height:32px;border-radius:6px;border:1px solid var(--lime);background:rgba(198,241,53,.1);color:var(--lime);font-size:18px;cursor:pointer;line-height:1">+</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px" id="resumo-nums"></div>
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;gap:8px">
+        <button class="btn-save" style="flex:1;background:#1c1c24;font-size:11px;padding:8px" onclick="exportData()">⬇ Exportar</button>
+        <label class="btn-save" style="flex:1;background:#1c1c24;font-size:11px;padding:8px;cursor:pointer;text-align:center">⬆ Importar<input type="file" accept=".json" style="display:none" onchange="importData(this)"></label>
+      </div>
+    </div>
+
+    <!-- HISTÓRICO -->
+    <div class="reg-card" style="flex:1">
+      <div class="section-label" style="margin-bottom:12px">HISTÓRICO</div>
+      <div class="hist-scroll" id="hist-list"></div>
+    </div>
+
+  </div><!-- /right -->
+
+</div><!-- /wrap -->
+
+<!-- ── JM INFOPRODUTOS ── -->
+<div id="wrap-jm" style="display:none;padding:24px 28px;max-width:1100px;margin:0 auto">
+
+  <!-- META MENSAL -->
+  <div class="hero" style="margin-bottom:24px">
+    <div class="hero-top">
+      <div>
+        <div class="hero-label">META MENSAL — PRODUTOS TESTADOS</div>
+        <div><span class="hero-pts" id="jm-testados">0</span><span class="hero-total"> / 6</span></div>
+      </div>
+      <div class="hero-right">
+        <div class="hero-pct" id="jm-pct">0%</div>
+        <div class="hero-pct-label">da meta</div>
+      </div>
+    </div>
+    <div class="hero-bar-wrap"><div class="hero-bar" id="jm-bar" style="width:0%"></div></div>
+    <div class="hero-sub" id="jm-sub">Teste 6 novos produtos este mês</div>
+  </div>
+
+  <!-- PRODUTOS -->
+  <div class="section-label" style="margin-bottom:16px">PRODUTOS</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px" id="jm-produtos"></div>
+
+</div>
+
+<!-- ── KIOTO ── -->
+<div id="wrap-kioto" style="display:none;padding:24px 28px;max-width:1100px;margin:0 auto">
+  <div class="hero" style="margin-bottom:24px">
+    <div class="hero-top">
+      <div>
+        <div class="hero-label">KIOTO — CORTES DE VÍDEO</div>
+        <div><span class="hero-pts" id="kioto-perfis-ativos">0</span><span class="hero-total"> / 4 perfis ativos</span></div>
+      </div>
+      <div class="hero-right">
+        <div class="hero-pct" id="kioto-videos-hoje">0</div>
+        <div class="hero-pct-label">vídeos hoje</div>
+      </div>
+    </div>
+    <div class="hero-bar-wrap"><div class="hero-bar" id="kioto-bar" style="width:0%"></div></div>
+    <div class="hero-sub" id="kioto-sub">Crie os 4 perfis e comece a postar diariamente</div>
+  </div>
+
+  <div class="section-label" style="margin-bottom:16px">PERFIS</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px" id="kioto-perfis"></div>
+</div>
+
+<!-- ── RECEITAS ── -->
+<div id="wrap-receitas" style="display:none;padding:24px 28px;max-width:800px;margin:0 auto">
+  <div class="hero" style="margin-bottom:24px">
+    <div class="hero-top">
+      <div>
+        <div class="hero-label">RECEITA TOTAL — <span id="rec-mes-label"></span></div>
+        <div><span style="font-size:13px;color:var(--muted)">R$</span><span class="hero-pts" id="rec-total">0</span></div>
+      </div>
+      <div class="hero-right">
+        <div class="hero-pct" id="rec-pct">0%</div>
+        <div class="hero-pct-label">de R$20k</div>
+      </div>
+    </div>
+    <div class="hero-bar-wrap"><div class="hero-bar" id="rec-bar" style="width:0%"></div></div>
+    <div class="hero-sub" id="rec-sub">Meta: R$20.000 no mês</div>
+  </div>
+
+  <div class="section-label" style="margin-bottom:16px">REGISTRAR RECEITA DO MÊS</div>
+  <div class="reg-card" style="margin-bottom:20px">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="field">
+        <div class="field-label"><div class="field-dot" style="background:var(--lime)"></div>OuvixPro (R$)</div>
+        <input type="number" id="rec-ouvix" placeholder="ex: 3500" min="0"/>
+      </div>
+      <div class="field">
+        <div class="field-label"><div class="field-dot" style="background:var(--purple)"></div>JM Infoprodutos (R$)</div>
+        <input type="number" id="rec-jm" placeholder="ex: 1200" min="0"/>
+      </div>
+      <div class="field">
+        <div class="field-label"><div class="field-dot" style="background:var(--orange)"></div>Kioto (R$)</div>
+        <input type="number" id="rec-kioto" placeholder="ex: 800" min="0"/>
+      </div>
+      <div class="field">
+        <div class="field-label"><div class="field-dot" style="background:var(--blue)"></div>Outros (R$)</div>
+        <input type="number" id="rec-outros" placeholder="ex: 500" min="0"/>
+      </div>
+      <button class="btn-save" onclick="saveReceita()">Salvar receita do mês</button>
+      <div class="save-feedback" id="rec-fb">Salvo!</div>
+    </div>
+  </div>
+
+  <div class="section-label" style="margin-bottom:16px">HISTÓRICO</div>
+  <div id="rec-hist"></div>
+</div>
+
+<script>
+const KEY='ouvixpro_v2';
+const META=80;
+const ROTINA_IDS = ['leads','demos','indicacao','cpl','linkedin-post','linkedin-conexoes','conteudos','engajamento'];
+
+const VERSICULOS = [
+  'Tudo posso naquele que me fortalece. — Filipenses 4:13',
+  'O Senhor é o meu pastor e nada me faltará. — Salmos 23:1',
+  'Confie no Senhor de todo o seu coração. — Provérbios 3:5',
+  'Seja forte e corajoso. Não se apavore, pois o Senhor seu Deus estará com você. — Josué 1:9',
+  'Busquem primeiro o Reino de Deus e a sua justiça, e todas essas coisas serão acrescentadas. — Mateus 6:33',
+  'Com Deus faremos proezas. — Salmos 60:12',
+  'O trabalho das suas mãos você comerá; feliz será você, e bem lhe irá. — Salmos 128:2',
+  'Nunca se canse de fazer o bem. — 2 Tessalonicenses 3:13',
+  'Peça e será dado; procure e achará; bata e a porta lhe será aberta. — Mateus 7:7',
+  'O plano dos diligentes leva certamente à abundância. — Provérbios 21:5',
+  'Não nos cansemos de fazer o bem, pois a seu tempo ceifaremos, se não desanimarmos. — Gálatas 6:9',
+  'Aquele que é fiel no pouco, também será fiel no muito. — Lucas 16:10',
+];
+
+const SUPA_URL = 'https://itqrwtgjybncdfutqkli.supabase.co';
+const SUPA_KEY = 'sb_publishable_V_kzpGaX9nR20QOGNPSC3A_oclSxI62';
+const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+let _cache = null;
+
+function load(){
+  if(_cache) return _cache;
+  try{
+    const raw=JSON.parse(localStorage.getItem(KEY))||{};
+    if(!raw.rotina) raw.rotina={};
+    if(!raw.days) raw.days=[];
+    _cache = raw;
+    return raw;
+  }catch{return{rotina:{},days:[]}}
+}
+
+function save(d){
+  _cache = d;
+  localStorage.setItem(KEY,JSON.stringify(d));
+  // sync to Supabase in background
+  supa.from('painel').upsert({id:'murilo', data:d, updated_at: new Date().toISOString()}).then(({error})=>{
+    if(error) console.warn('Supabase sync error:', error.message);
+  });
+}
+
+async function loadFromCloud(){
+  try{
+    const {data, error} = await supa.from('painel').select('data').eq('id','murilo').single();
+    if(error || !data) return;
+    const raw = data.data || {};
+    if(!raw.rotina) raw.rotina={};
+    if(!raw.days) raw.days=[];
+    _cache = raw;
+    localStorage.setItem(KEY, JSON.stringify(raw));
+    // re-render with cloud data
+    updateHero(); renderRotina(); renderExtras(); renderChart();
+    document.getElementById('sync-status').textContent = '☁ Sincronizado';
+  }catch(e){
+    console.warn('Cloud load failed:', e);
+    document.getElementById('sync-status').textContent = '⚠ Offline';
+  }
+}
+function todayKey(){return new Date().toISOString().slice(0,10)}
+
+function exportData(){
+  const data=load();
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='ouvixpro_backup_'+todayKey()+'.json';
+  a.click();
+}
+
+function importData(input){
+  const file=input.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{const data=JSON.parse(e.target.result);save(data);location.reload();}
+    catch{alert('Arquivo inválido.');}
+  };
+  reader.readAsText(file);
+}
+
+// ── ROTINA ──
+function getRotinaHoje(){
+  const d=load(); const tk=todayKey();
+  if(!d.rotina[tk]) d.rotina[tk]={checks:{},nums:{}};
+  return d.rotina[tk];
+}
+
+function toggleRotina(id){
+  const d=load(); const tk=todayKey();
+  if(!d.rotina[tk]) d.rotina[tk]={checks:{},nums:{}};
+  d.rotina[tk].checks[id] = !d.rotina[tk].checks[id];
+  save(d); renderRotina();
+}
+
+function saveRotinaNum(id, val){
+  const d=load(); const tk=todayKey();
+  if(!d.rotina[tk]) d.rotina[tk]={checks:{},nums:{}};
+  d.rotina[tk].nums[id] = parseFloat(val)||0;
+  save(d); renderRotina();
+}
+
+function renderRotina(){
+  const r = getRotinaHoje();
+  const done = ROTINA_IDS.filter(id=>r.checks[id]).length;
+  document.getElementById('tasks-prog').textContent = done+' / '+ROTINA_IDS.length;
+
+  ROTINA_IDS.forEach(id=>{
+    const item = document.getElementById('ri-'+id);
+    const chk = document.getElementById('rchk-'+id);
+    if(!item||!chk) return;
+    const isDone = r.checks[id];
+    item.classList.toggle('done', isDone);
+    chk.textContent = isDone ? '✓' : '';
+    const numEl = document.getElementById('rnum-'+id);
+    if(numEl && r.nums[id]) numEl.value = r.nums[id];
+  });
+
+  // Status CPL
+  const cpl = r.nums['cpl'];
+  const cplStatus = document.getElementById('cpl-status');
+  if(cplStatus && cpl){
+    cplStatus.textContent = cpl<=15 ? '✓ ótimo' : cpl<=25 ? '⚠ alto' : '✗ alto demais';
+    cplStatus.style.color = cpl<=15 ? 'var(--lime)' : cpl<=25 ? 'var(--orange)' : 'var(--red)';
+  }
+
+  renderResumo(r);
+  renderHist();
+}
+
+function renderResumo(r){
+  const now = new Date();
+  document.getElementById('resumo-data').textContent = now.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
+  document.getElementById('clientes-hoje').textContent = r.nums&&r.nums.clientes?r.nums.clientes:0;
+  const items = [
+    {label:'Leads chamados', val: r.nums['leads']||0, unit:'pessoas', color:'var(--blue)'},
+    {label:'Demos agendadas', val: r.nums['demos']||0, unit:'demos', color:'var(--lime)'},
+    {label:'CPL hoje', val: r.nums['cpl'] ? 'R$'+r.nums['cpl'] : '—', unit:'', color:'var(--orange)'},
+    {label:'Conexões LinkedIn', val: r.nums['linkedin-conexoes']||0, unit:'', color:'var(--purple)'},
+    {label:'Conteúdos criados', val: (r.nums['conteudos']||0)+'/5', unit:'', color:'var(--green)'},
+  ];
+  document.getElementById('resumo-nums').innerHTML = items.map(i=>`
+    <div class="resumo-row">
+      <span class="resumo-label">${i.label}</span>
+      <span class="resumo-val" style="color:${i.color}">${i.val} ${i.unit}</span>
+    </div>`).join('');
+}
+
+function renderHist(){
+  const d=load();
+  const el=document.getElementById('hist-list');
+  const rotinaKeys = Object.keys(d.rotina||{}).sort((a,b)=>b.localeCompare(a));
+  // dados antigos do formato anterior
+  const diasAntigos = (d.days||[]).filter(r=>!d.rotina[r.date]).sort((a,b)=>b.date.localeCompare(a.date));
+  if(!rotinaKeys.length && !diasAntigos.length){el.innerHTML='<div class="hist-empty">Nenhum registro ainda</div>';return}
+  const rotinaHtml = rotinaKeys.slice(0,15).map(date=>{
+    const r = d.rotina[date];
+    const done = ROTINA_IDS.filter(id=>r.checks&&r.checks[id]).length;
+    const [y,m,day]=date.split('-');
+    return`<div class="hist-row">
+      <span class="hist-date">${day}/${m}/${y}</span>
+      <span class="hist-pts">${done}/${ROTINA_IDS.length} tarefas</span>
+      <div class="hist-chip">
+        ${r.nums&&r.nums.leads?`<span class="hchip" style="color:var(--blue)">${r.nums.leads} leads</span>`:''}
+        ${r.nums&&r.nums.demos?`<span class="hchip" style="color:var(--lime)">${r.nums.demos} demos</span>`:''}
+        ${r.nums&&r.nums.cpl?`<span class="hchip" style="color:var(--orange)">CPL R$${r.nums.cpl}</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+  const antigosHtml = diasAntigos.slice(0,10).map(r=>{
+    const [y,m,day]=r.date.split('-');
+    return`<div class="hist-row" style="opacity:.6">
+      <span class="hist-date">${day}/${m}/${y}</span>
+      <span class="hist-pts" style="color:var(--muted)">${r.pontos||0}pt</span>
+      <div class="hist-chip">
+        ${r.leads?`<span class="hchip" style="color:var(--blue)">${r.leads} leads</span>`:''}
+        ${r.demos?`<span class="hchip" style="color:var(--lime)">${r.demos} demos</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+  el.innerHTML = rotinaHtml + (antigosHtml ? `<div style="font-size:10px;color:var(--muted);padding:8px 0;font-family:var(--mono)">— registros anteriores —</div>`+antigosHtml : '');
+}
+
+function renderChart(){
+  const d=load();
+  const rotinaKeys = Object.keys(d.rotina||{}).sort((a,b)=>a.localeCompare(b)).slice(-12);
+  const el=document.getElementById('chart-bars');
+  if(!rotinaKeys.length){el.innerHTML='<div class="empty-chart" style="width:100%">Sem dados ainda</div>';return}
+  el.innerHTML=rotinaKeys.map(date=>{
+    const r = d.rotina[date];
+    const done = ROTINA_IDS.filter(id=>r.checks&&r.checks[id]).length;
+    const h=Math.max(4,Math.round((done/ROTINA_IDS.length)*72));
+    const [,m,day]=date.split('-');
+    const op=0.3+0.7*(done/ROTINA_IDS.length);
+    return`<div class="bar-col">
+      <div class="bar-pts">${done}</div>
+      <div class="bar-fill" style="height:${h}px;background:var(--lime);opacity:${op.toFixed(2)}"></div>
+      <div class="bar-date">${day}/${m}</div>
+    </div>`;
+  }).join('');
+}
+
+function totalClientes(){
+  const d=load();
+  const dosDays=(d.days||[]).reduce((s,r)=>s+(parseInt(r.pontos)||0),0);
+  const daRotina=Object.values(d.rotina||{}).reduce((s,r)=>s+(parseInt(r.nums&&r.nums.clientes)||0),0);
+  return dosDays+daRotina;
+}
+
+function updateHero(){
+  const clientes=totalClientes();
+  const pct=Math.min(100,Math.round((clientes/META)*100));
+  document.getElementById('hero-pts').textContent=clientes;
+  document.getElementById('hero-pct').textContent=pct+'%';
+  document.getElementById('hero-bar').style.width=pct+'%';
+  document.getElementById('hero-sub').textContent=clientes>=META?'Meta batida! 🎉':`Faltam ${META-clientes} clientes para bater a meta`;
+  const d=load();
+  const dias=Object.keys(d.rotina||{}).length+(d.days||[]).length;
+  document.getElementById('hero-dias').textContent=dias?`${dias} dia(s) registrado(s)`:'Nenhum dia registrado ainda';
+}
+
+function switchTab(tab,btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tabp').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  btn.classList.add('active');
+}
+
+function setHeader(){
+  const now=new Date();
+  const h=now.getHours();
+  const g=h<12?'Bom dia, Murilo 👊':h<18?'Boa tarde, Murilo':'Boa noite, Murilo';
+  document.getElementById('greeting').textContent=g;
+  document.getElementById('topbar-date').textContent=now.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
+}
+
+// ── TELA DE BOAS-VINDAS ──
+function mostrarBoasVindas(){
+  const jaAbriu = localStorage.getItem('boasvindas_'+todayKey());
+  if(jaAbriu) return;
+  const idx = new Date().getDate() % VERSICULOS.length;
+  const versiculo = VERSICULOS[idx];
+  const overlay = document.createElement('div');
+  overlay.id = 'bv-overlay';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(8,8,16,.96);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;padding:40px;text-align:center';
+  overlay.innerHTML=`
+    <div style="font-size:48px;margin-bottom:24px">🦁</div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.15em;margin-bottom:16px">OUVIX PRO — PAINEL DO MURILO</div>
+    <div style="font-size:28px;font-weight:800;max-width:500px;line-height:1.3;margin-bottom:20px">Preparado para mudar sua realidade?</div>
+    <div style="font-size:14px;color:var(--muted2);font-style:italic;max-width:420px;line-height:1.7;margin-bottom:36px">"${versiculo}"</div>
+    <button onclick="fecharBoasVindas()" style="background:var(--lime);color:#000;border:none;padding:14px 40px;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;font-family:var(--sans)">Vamos pra cima! 🚀</button>
+  `;
+  document.body.appendChild(overlay);
+}
+
+function fecharBoasVindas(){
+  localStorage.setItem('boasvindas_'+todayKey(), '1');
+  document.getElementById('bv-overlay').remove();
+}
+
+function addCliente(delta){
+  const d=load(); const tk=todayKey();
+  if(!d.rotina[tk]) d.rotina[tk]={checks:{},nums:{}};
+  const atual=parseInt(d.rotina[tk].nums.clientes)||0;
+  d.rotina[tk].nums.clientes=Math.max(0,atual+delta);
+  save(d);
+  document.getElementById('clientes-hoje').textContent=d.rotina[tk].nums.clientes;
+  updateHero();
+}
+
+function addExtra(){
+  const input = document.getElementById('extra-input');
+  const texto = input.value.trim();
+  if(!texto) return;
+  const d=load(); const tk=todayKey();
+  if(!d.rotina[tk]) d.rotina[tk]={checks:{},nums:{},extras:[]};
+  if(!d.rotina[tk].extras) d.rotina[tk].extras=[];
+  d.rotina[tk].extras.push({id:'extra_'+Date.now(), texto, done:false});
+  save(d);
+  input.value='';
+  renderExtras();
+}
+
+function toggleExtra(id){
+  const d=load(); const tk=todayKey();
+  const ex = d.rotina[tk]?.extras?.find(e=>e.id===id);
+  if(ex) ex.done = !ex.done;
+  save(d); renderExtras();
+}
+
+function removeExtra(id){
+  const d=load(); const tk=todayKey();
+  if(d.rotina[tk]?.extras) d.rotina[tk].extras = d.rotina[tk].extras.filter(e=>e.id!==id);
+  save(d); renderExtras();
+}
+
+function renderExtras(){
+  const r = getRotinaHoje();
+  const extras = r.extras||[];
+  const el = document.getElementById('rotina-extras');
+  if(!extras.length){ el.innerHTML='<div style="font-size:12px;color:var(--muted);padding:4px 0">Nenhuma tarefa extra ainda</div>'; return; }
+  el.innerHTML = extras.map(e=>`
+    <div class="rotina-item ${e.done?'done':''}" style="margin-bottom:6px">
+      <div class="rotina-check" onclick="toggleExtra('${e.id}')"><span>${e.done?'✓':''}</span></div>
+      <div class="rotina-body"><div class="rotina-label">${e.texto}</div></div>
+      <button onclick="removeExtra('${e.id}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:0 4px">×</button>
+    </div>`).join('');
+}
+
+try { setHeader(); } catch(e) { console.error('setHeader:', e); }
+try { updateHero(); } catch(e) { console.error('updateHero:', e); }
+try { renderRotina(); } catch(e) { console.error('renderRotina:', e); }
+try { renderExtras(); } catch(e) { console.error('renderExtras:', e); }
+try { renderChart(); } catch(e) { console.error('renderChart:', e); }
+try { mostrarBoasVindas(); } catch(e) { console.error('mostrarBoasVindas:', e); }
+loadFromCloud();
+
+// ══════════════════════════════════════
+// JM INFOPRODUTOS
+// ══════════════════════════════════════
+const KEY_JM = 'jm_infoprodutos_v1';
+const META_JM = 6;
+
+const CHECKLIST_LAUNCH = [
+  'Ideia definida',
+  'Produto criado',
+  'Página de vendas feita',
+  'Criativos ok',
+  'Instagram criado',
+  'Página no Facebook criada',
+  '10 posts nas redes sociais',
+  'Saldo na conta para rodar anúncio',
+  'Lançar e iniciar anúncios',
+];
+
+const PRODUTOS_INICIAIS = [
+  { id:'devocional', nome:'Devocional Espiritual', emoji:'🙏', comissao:'50% — parceria Lucilene', status:'ativo', statusColor:'var(--lime)', testado:true },
+  { id:'mapa_astral', nome:'Mapa Astral da Atração', emoji:'✨', comissao:'100% — produto próprio', status:'ativo', statusColor:'var(--lime)', testado:true },
+  { id:'rotina_luz', nome:'Rotina da Luz', emoji:'🌅', comissao:'100% — produto próprio', status:'pré-lançamento', statusColor:'var(--orange)', testado:false },
+];
+
+function loadJM(){ try{ return JSON.parse(localStorage.getItem(KEY_JM))||{checks:{},testados:[]} }catch{ return{checks:{},testados:[]} } }
+function saveJM(d){ localStorage.setItem(KEY_JM, JSON.stringify(d)); }
+
+function toggleJMCheck(prodId, i){
+  const d = loadJM();
+  if(!d.checks[prodId]) d.checks[prodId] = Array(CHECKLIST_LAUNCH.length).fill(false);
+  d.checks[prodId][i] = !d.checks[prodId][i];
+  saveJM(d);
+  renderJM();
+}
+
+function toggleTestado(prodId){
+  const d = loadJM();
+  if(!d.testados) d.testados = [];
+  const idx = d.testados.indexOf(prodId);
+  if(idx >= 0) d.testados.splice(idx,1); else d.testados.push(prodId);
+  saveJM(d);
+  renderJM();
+}
+
+function renderJM(){
+  const d = loadJM();
+  const testados = (d.testados||[]).length + PRODUTOS_INICIAIS.filter(p=>p.testado).length;
+  const pct = Math.min(100, Math.round((testados/META_JM)*100));
+  document.getElementById('jm-testados').textContent = testados;
+  document.getElementById('jm-pct').textContent = pct+'%';
+  document.getElementById('jm-bar').style.width = pct+'%';
+  document.getElementById('jm-sub').textContent = testados >= META_JM ? 'Meta batida! 🎉' : `Faltam ${META_JM - testados} produtos para bater a meta`;
+
+  const el = document.getElementById('jm-produtos');
+  el.innerHTML = PRODUTOS_INICIAIS.map(p => {
+    const checks = d.checks[p.id] || Array(CHECKLIST_LAUNCH.length).fill(false);
+    const done = checks.filter(Boolean).length;
+    const total = CHECKLIST_LAUNCH.length;
+    const pct = Math.round((done/total)*100);
+    const allDone = done === total;
+    return `
+    <div class="prod-card">
+      <div class="prod-header">
+        <div class="prod-icon" style="background:rgba(198,241,53,.08);border:1px solid rgba(198,241,53,.15)">${p.emoji}</div>
+        <div>
+          <div class="prod-name">${p.nome}</div>
+          <div class="prod-comissao">${p.comissao}</div>
+        </div>
+        <span class="prod-badge" style="background:rgba(0,0,0,.3);color:${p.statusColor};border:1px solid ${p.statusColor}40">${p.status}</span>
+      </div>
+      <div class="prod-progress"><div class="prod-progress-fill" style="width:${pct}%"></div></div>
+      <div class="prod-prog-label">${done}/${total} itens do checklist · ${pct}%</div>
+      <div class="prod-checklist">
+        ${CHECKLIST_LAUNCH.map((item,i)=>`
+          <div class="prod-check-item ${checks[i]?'done':''}" onclick="toggleJMCheck('${p.id}',${i})">
+            <div class="prod-check-box">${checks[i]?'✓':''}</div>
+            <span>${item}</span>
+          </div>
+        `).join('')}
+      </div>
+      ${allDone ? `<div style="margin-top:12px;padding:8px;background:rgba(198,241,53,.08);border:1px solid rgba(198,241,53,.2);border-radius:8px;font-size:11px;color:var(--lime);text-align:center">✅ Produto pronto para lançar!</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function switchCompany(co){
+  const companies = ['ouvix','jm','kioto','receitas'];
+  document.querySelector('.wrap').style.display = co==='ouvix' ? '' : 'none';
+  companies.filter(c=>c!=='ouvix').forEach(c=>{
+    const el = document.getElementById('wrap-'+c);
+    if(el) el.style.display = co===c ? '' : 'none';
+  });
+  companies.forEach(c=>{
+    document.getElementById('btn-'+c)?.classList.toggle('active', co===c);
+  });
+  if(co==='jm') renderJM();
+  if(co==='kioto') renderKioto();
+  if(co==='receitas') renderReceitas();
+}
+
+renderJM();
+
+// ══════════════════════════════════════
+// KIOTO
+// ══════════════════════════════════════
+const KEY_KIOTO = 'kioto_v1';
+const KIOTO_PERFIS = [
+  { id:'p1', nome:'Perfil 1', emoji:'🎬', nicho:'Entretenimento' },
+  { id:'p2', nome:'Perfil 2', emoji:'🎭', nicho:'Entretenimento' },
+  { id:'p3', nome:'Perfil 3', emoji:'🎥', nicho:'Entretenimento' },
+  { id:'p4', nome:'Perfil 4', emoji:'🎞️', nicho:'Entretenimento' },
+];
+const KIOTO_CHECKLIST = [
+  'Perfil criado na Kioto',
+  'Bio e foto de capa definidas',
+  'Primeiro vídeo postado',
+  'Postagem do dia feita',
+];
+
+function loadKioto(){ try{ return JSON.parse(localStorage.getItem(KEY_KIOTO))||{checks:{},videos:{}} }catch{ return{checks:{},videos:{}} } }
+function saveKioto(d){ localStorage.setItem(KEY_KIOTO, JSON.stringify(d)); }
+
+function toggleKiotoCheck(perfId, i){
+  const d = loadKioto();
+  if(!d.checks[perfId]) d.checks[perfId] = Array(KIOTO_CHECKLIST.length).fill(false);
+  d.checks[perfId][i] = !d.checks[perfId][i];
+  saveKioto(d);
+  renderKioto();
+}
+
+function renderKioto(){
+  const d = loadKioto();
+  const today = new Date().toISOString().slice(0,10);
+  let ativos = 0, videosHoje = 0;
+
+  const el = document.getElementById('kioto-perfis');
+  el.innerHTML = KIOTO_PERFIS.map(p => {
+    const checks = d.checks[p.id] || Array(KIOTO_CHECKLIST.length).fill(false);
+    const criado = checks[0];
+    const postouHoje = d.videos && d.videos[p.id+':'+today];
+    if(criado) ativos++;
+    if(postouHoje) videosHoje++;
+    return `
+    <div class="prod-card">
+      <div class="prod-header">
+        <div class="prod-icon" style="background:rgba(255,159,69,.08);border:1px solid rgba(255,159,69,.15)">${p.emoji}</div>
+        <div>
+          <div class="prod-name">${p.nome}</div>
+          <div class="prod-comissao">${p.nicho}</div>
+        </div>
+        <span class="prod-badge" style="background:${criado?'rgba(198,241,53,.1)':'rgba(90,88,96,.2)'};color:${criado?'var(--lime)':'var(--muted)'};border:1px solid ${criado?'rgba(198,241,53,.25)':'rgba(90,88,96,.4)'}">
+          ${criado ? 'ativo' : 'criar'}
+        </span>
+      </div>
+      <div class="prod-checklist">
+        ${KIOTO_CHECKLIST.map((item,i)=>`
+          <div class="prod-check-item ${checks[i]?'done':''}" onclick="toggleKiotoCheck('${p.id}',${i})">
+            <div class="prod-check-box">${checks[i]?'✓':''}</div>
+            <span>${item}</span>
+          </div>
+        `).join('')}
+      </div>
+      <button onclick="marcarVideoHoje('${p.id}')" style="margin-top:12px;width:100%;padding:8px;border-radius:8px;border:1px solid ${postouHoje?'rgba(198,241,53,.3)':'var(--border2)'};background:${postouHoje?'rgba(198,241,53,.08)':'var(--card2)'};color:${postouHoje?'var(--lime)':'var(--text)'};font-size:12px;cursor:pointer;font-family:var(--mono)">
+        ${postouHoje ? '✓ Postou hoje' : '+ Marcar post de hoje'}
+      </button>
+    </div>`;
+  }).join('');
+
+  const pct = Math.round((ativos/4)*100);
+  document.getElementById('kioto-perfis-ativos').textContent = ativos;
+  document.getElementById('kioto-videos-hoje').textContent = videosHoje;
+  document.getElementById('kioto-bar').style.width = pct+'%';
+  document.getElementById('kioto-sub').textContent = ativos===4 ? `Todos os perfis ativos! ${videosHoje}/4 posts hoje.` : `Crie mais ${4-ativos} perfil(s) para ativar todos`;
+}
+
+function marcarVideoHoje(perfId){
+  const d = loadKioto();
+  if(!d.videos) d.videos = {};
+  const key = perfId+':'+new Date().toISOString().slice(0,10);
+  d.videos[key] = !d.videos[key];
+  saveKioto(d);
+  renderKioto();
+}
+
+// ══════════════════════════════════════
+// RECEITAS
+// ══════════════════════════════════════
+const KEY_REC = 'receitas_v1';
+const META_REC = 20000;
+
+function loadRec(){ try{ return JSON.parse(localStorage.getItem(KEY_REC))||{meses:[]} }catch{ return{meses:[]} } }
+function saveRec(d){ localStorage.setItem(KEY_REC, JSON.stringify(d)); }
+
+function mesAtual(){ return new Date().toISOString().slice(0,7); }
+
+function saveReceita(){
+  const d = loadRec();
+  const mes = mesAtual();
+  const rec = {
+    mes,
+    ouvix: parseFloat(document.getElementById('rec-ouvix').value)||0,
+    jm: parseFloat(document.getElementById('rec-jm').value)||0,
+    kioto: parseFloat(document.getElementById('rec-kioto').value)||0,
+    outros: parseFloat(document.getElementById('rec-outros').value)||0,
+  };
+  rec.total = rec.ouvix + rec.jm + rec.kioto + rec.outros;
+  const idx = d.meses.findIndex(m=>m.mes===mes);
+  if(idx>=0) d.meses[idx]=rec; else d.meses.push(rec);
+  saveRec(d);
+  ['rec-ouvix','rec-jm','rec-kioto','rec-outros'].forEach(id=>document.getElementById(id).value='');
+  const fb = document.getElementById('rec-fb');
+  fb.classList.add('show'); setTimeout(()=>fb.classList.remove('show'),2500);
+  renderReceitas();
+}
+
+function renderReceitas(){
+  const d = loadRec();
+  const mes = mesAtual();
+  const [ano,m] = mes.split('-');
+  document.getElementById('rec-mes-label').textContent = new Date(ano,m-1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'}).toUpperCase();
+
+  const atual = d.meses.find(r=>r.mes===mes);
+  const total = atual ? atual.total : 0;
+  const pct = Math.min(100, Math.round((total/META_REC)*100));
+  document.getElementById('rec-total').textContent = total.toLocaleString('pt-BR');
+  document.getElementById('rec-pct').textContent = pct+'%';
+  document.getElementById('rec-bar').style.width = pct+'%';
+  document.getElementById('rec-sub').textContent = total>=META_REC ? '🎉 Meta de R$20k batida!' : `Faltam R$${(META_REC-total).toLocaleString('pt-BR')} para os R$20k`;
+
+  if(atual){
+    document.getElementById('rec-ouvix').placeholder = `atual: R$${atual.ouvix.toLocaleString('pt-BR')}`;
+    document.getElementById('rec-jm').placeholder = `atual: R$${atual.jm.toLocaleString('pt-BR')}`;
+    document.getElementById('rec-kioto').placeholder = `atual: R$${atual.kioto.toLocaleString('pt-BR')}`;
+    document.getElementById('rec-outros').placeholder = `atual: R$${atual.outros.toLocaleString('pt-BR')}`;
+  }
+
+  const hist = document.getElementById('rec-hist');
+  const sorted = [...d.meses].sort((a,b)=>b.mes.localeCompare(a.mes));
+  if(!sorted.length){ hist.innerHTML='<div class="hist-empty">Nenhum registro ainda</div>'; return; }
+  hist.innerHTML = sorted.map(r=>{
+    const [y,mo] = r.mes.split('-');
+    const label = new Date(y,mo-1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+    const pct = Math.min(100,Math.round((r.total/META_REC)*100));
+    return `<div class="hist-row" style="flex-direction:column;align-items:flex-start;gap:6px;padding:14px">
+      <div style="display:flex;width:100%;align-items:center">
+        <span class="hist-date" style="text-transform:capitalize">${label}</span>
+        <span class="hist-pts" style="margin-left:auto">R$${r.total.toLocaleString('pt-BR')}</span>
+        <span style="font-family:var(--mono);font-size:10px;color:${r.total>=META_REC?'var(--lime)':'var(--muted)'};margin-left:10px">${pct}%</span>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <span class="hchip" style="color:var(--lime)">Ouvix R$${r.ouvix.toLocaleString('pt-BR')}</span>
+        <span class="hchip" style="color:var(--purple)">JM R$${r.jm.toLocaleString('pt-BR')}</span>
+        <span class="hchip" style="color:var(--orange)">Kioto R$${r.kioto.toLocaleString('pt-BR')}</span>
+        ${r.outros>0?`<span class="hchip" style="color:var(--blue)">Outros R$${r.outros.toLocaleString('pt-BR')}</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Alerta no último dia do mês
+(function checkUltimoDiaMes(){
+  const now = new Date();
+  const ultimo = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+  if(now.getDate()===ultimo){
+    const mes = mesAtual();
+    const d = loadRec();
+    const jaRegistrou = d.meses.find(m=>m.mes===mes);
+    if(!jaRegistrou){
+      setTimeout(()=>{
+        if(confirm('Hoje é o último dia do mês! Quer registrar suas receitas agora?')){
+          switchCompany('receitas');
+        }
+      }, 1500);
+    }
+  }
+})();
+</script>
+</body>
+</html>
