@@ -7,28 +7,41 @@
 body{font-family:sans-serif;background:#0f0f13;color:#eee;padding:40px;max-width:600px;margin:0 auto}
 h2{margin-bottom:8px}
 p{color:#888;margin-bottom:20px;font-size:14px}
-textarea{width:100%;height:200px;background:#1c1c24;border:1px solid #333;color:#eee;padding:12px;border-radius:8px;font-size:13px;font-family:monospace}
 button{margin-top:12px;padding:12px 24px;background:#c6f135;color:#000;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;width:100%}
 #msg{margin-top:12px;font-size:14px}
 </style>
 </head>
 <body>
-<h2>Importar dados do painel</h2>
-<p>Cole o JSON abaixo e clique em Importar. Depois acesse o painel normalmente.</p>
-<textarea id="json" placeholder='Cole o JSON aqui...'></textarea>
-<button onclick="importar()">Importar e ir para o painel</button>
+<h2>Restaurar dados do painel</h2>
+<p>Clique no botão abaixo para restaurar seus dados.</p>
+<button onclick="importar()">Restaurar meus dados e abrir painel</button>
 <div id="msg"></div>
 <script>
-function importar(){
-  try{
-    var v = document.getElementById('json').value.trim().replace(/[\r\n]+/g, ' ');
-    JSON.parse(v); // valida
-    localStorage.setItem('painel_murilo_v3', v);
-    document.getElementById('msg').innerHTML = '<span style="color:#c6f135">✓ Importado! Redirecionando...</span>';
-    setTimeout(()=>{ window.location.href='index.html'; }, 1200);
-  }catch(e){
-    document.getElementById('msg').innerHTML = '<span style="color:#ff6b6b">Erro: JSON inválido. Verifique o conteúdo.</span>';
+var DATA = {
+  "tasks": {
+    "2026-04-10": [
+      {"id":"task_1775842446450","texto":"Post LinkedIn Ouvix Pro","empresa":"ouvix","qty":1,"unit":null,"done":true,"agendada":false},
+      {"id":"task_1775842456892","texto":"Post LinkedIn Murilo","empresa":"mr","qty":1,"unit":null,"done":false,"agendada":false},
+      {"id":"task_1775842473649","texto":"Análise das redes sociais da Ouvix Pro","empresa":"ouvix","qty":null,"unit":null,"done":false,"agendada":false},
+      {"id":"task_1775842502798","texto":"Analisar a semana de propostas e reuniões para atualizar a meta","empresa":"ouvix","qty":null,"unit":null,"done":false,"agendada":false},
+      {"id":"task_1775842524188","texto":"Mandar mensagem para os clientes sobre os microfones que estão a caminho","empresa":"ouvix","qty":null,"unit":null,"done":false,"agendada":false},
+      {"id":"task_1775842548015","texto":"Preparar os conteúdos para os próximos dias que estarei em viagem","empresa":"ouvix","qty":null,"unit":null,"done":false,"agendada":false},
+      {"id":"task_1775842560388","texto":"Abordar Leads do Facebook","empresa":"ouvix","qty":null,"unit":null,"done":false,"agendada":false},
+      {"id":"task_1775842612028","texto":"Alinhar e Revisar todos os projetos","empresa":"ouvix","qty":null,"unit":null,"done":false,"agendada":false},
+      {"id":"task_1775842704107","texto":"Cuidar das cobranças dos clientes para ver se esta tudo conforme o programado","empresa":"ouvix","qty":null,"unit":null,"done":false,"agendada":false},
+      {"id":"task_1775842737748","texto":"Organizar aqui no sistema, dentro da Ouvix Pro, as coisas do meu comercial","empresa":"ouvix","qty":null,"unit":null,"done":false,"agendada":false},
+      {"id":"task_1775842753649","texto":"Leitura","empresa":"mr","qty":null,"unit":null,"done":false,"agendada":false}
+    ],
+    "2026-04-11": [
+      {"id":"task_1775842589952","texto":"Reunião com Nicolas","empresa":"mr","qty":null,"unit":null,"done":false,"agendada":true}
+    ]
   }
+};
+
+function importar(){
+  localStorage.setItem('painel_murilo_v3', JSON.stringify(DATA));
+  document.getElementById('msg').innerHTML = '<span style="color:#c6f135">✓ Dados restaurados! Redirecionando...</span>';
+  setTimeout(function(){ window.location.href='index.html'; }, 1200);
 }
 </script>
 </body>
