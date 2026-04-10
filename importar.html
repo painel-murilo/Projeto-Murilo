@@ -21,7 +21,7 @@ button{margin-top:12px;padding:12px 24px;background:#c6f135;color:#000;border:no
 <script>
 function importar(){
   try{
-    var v = document.getElementById('json').value.trim();
+    var v = document.getElementById('json').value.trim().replace(/[\r\n]+/g, ' ');
     JSON.parse(v); // valida
     localStorage.setItem('painel_murilo_v3', v);
     document.getElementById('msg').innerHTML = '<span style="color:#c6f135">✓ Importado! Redirecionando...</span>';
