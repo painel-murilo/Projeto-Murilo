@@ -338,11 +338,54 @@ function fmt(date){
 function todayKey(){ return TODAY; }
 
 // ── STORAGE ────────────────────────────────────────────────────────────────
+// Tenta sincronizar com o servidor (funciona em qualquer dispositivo via ngrok)
+const SERVER_URLS = ['http://localhost:3001', 'https://pledge-unproven-subdued.ngrok-free.dev'];
+let _serverUrl = null;
+
+async function detectServer() {
+  for (const url of SERVER_URLS) {
+    try {
+      const r = await fetch(`${url}/api/health`, { signal: AbortSignal.timeout(2000) });
+      if (r.ok) { _serverUrl = url; return url; }
+    } catch {}
+  }
+  return null;
+}
+
+async function syncFromServer() {
+  const url = _serverUrl || await detectServer();
+  if (!url) return;
+  try {
+    const r = await fetch(`${url}/api/painel-data`, { signal: AbortSignal.timeout(3000) });
+    if (!r.ok) return;
+    const data = await r.json();
+    if (data && Object.keys(data).length > 0) {
+      localStorage.setItem('painel_murilo_v3', JSON.stringify(data));
+    }
+  } catch {}
+}
+
+async function saveToServer(d) {
+  const url = _serverUrl || await detectServer();
+  if (!url) return;
+  try {
+    await fetch(`${url}/api/painel-data`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(d),
+      signal: AbortSignal.timeout(3000)
+    });
+  } catch {}
+}
+
 function loadData(){
   try{ return JSON.parse(localStorage.getItem('painel_murilo_v3') || '{}'); }
   catch{ return {}; }
 }
-function saveData(d){ localStorage.setItem('painel_murilo_v3', JSON.stringify(d)); }
+function saveData(d){
+  localStorage.setItem('painel_murilo_v3', JSON.stringify(d));
+  saveToServer(d); // sincroniza em background
+}
 
 function getTasks(date){
   const d = loadData();
@@ -730,7 +773,8 @@ document.getElementById('task-modal-overlay').addEventListener('click', function
 })();
 
 // ── INIT ──────────────────────────────────────────────────────────────────
-renderHoje();
+// Sincroniza do servidor antes de renderizar (puxa dados mais recentes)
+syncFromServer().then(() => renderHoje());
 </script>
 </body>
 </html>
