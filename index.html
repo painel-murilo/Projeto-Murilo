@@ -337,28 +337,20 @@ function fmt(date){
 
 function todayKey(){ return TODAY; }
 
-// ── STORAGE ────────────────────────────────────────────────────────────────
-// Tenta sincronizar com o servidor (funciona em qualquer dispositivo via ngrok)
-const SERVER_URLS = ['http://localhost:3001', 'https://pledge-unproven-subdued.ngrok-free.dev'];
-let _serverUrl = null;
-
-async function detectServer() {
-  for (const url of SERVER_URLS) {
-    try {
-      const r = await fetch(`${url}/api/health`, { signal: AbortSignal.timeout(2000) });
-      if (r.ok) { _serverUrl = url; return url; }
-    } catch {}
-  }
-  return null;
-}
+// ── STORAGE + SYNC (JSONBin — funciona em qualquer dispositivo) ────────────
+const JSONBIN_KEY = '$2a$10$HEIJnLK4eMRxm7LvzeIeJ.LrdB5.Wp0M/0GFaXD6h75OmVjg8CDLa';
+const JSONBIN_BIN = '69dd5ad5aaba882197f6473b';
+const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN}`;
 
 async function syncFromServer() {
-  const url = _serverUrl || await detectServer();
-  if (!url) return;
   try {
-    const r = await fetch(`${url}/api/painel-data`, { signal: AbortSignal.timeout(3000) });
+    const r = await fetch(`${JSONBIN_URL}/latest`, {
+      headers: { 'X-Master-Key': JSONBIN_KEY },
+      signal: AbortSignal.timeout(5000)
+    });
     if (!r.ok) return;
-    const data = await r.json();
+    const json = await r.json();
+    const data = json.record;
     if (data && Object.keys(data).length > 0) {
       localStorage.setItem('painel_murilo_v3', JSON.stringify(data));
     }
@@ -366,14 +358,12 @@ async function syncFromServer() {
 }
 
 async function saveToServer(d) {
-  const url = _serverUrl || await detectServer();
-  if (!url) return;
   try {
-    await fetch(`${url}/api/painel-data`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    await fetch(JSONBIN_URL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_KEY },
       body: JSON.stringify(d),
-      signal: AbortSignal.timeout(3000)
+      signal: AbortSignal.timeout(5000)
     });
   } catch {}
 }
@@ -384,7 +374,7 @@ function loadData(){
 }
 function saveData(d){
   localStorage.setItem('painel_murilo_v3', JSON.stringify(d));
-  saveToServer(d); // sincroniza em background
+  saveToServer(d); // sincroniza em background com JSONBin
 }
 
 function getTasks(date){
