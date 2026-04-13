@@ -38,8 +38,19 @@ var DATA = {
   }
 };
 
-function importar(){
+async function importar(){
   localStorage.setItem('painel_murilo_v3', JSON.stringify(DATA));
+  document.getElementById('msg').innerHTML = '<span style="color:#aaa">Salvando na nuvem...</span>';
+  try {
+    await fetch('https://api.jsonbin.io/v3/b/69dd5ad5aaba882197f6473b', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': '$2a$10$HEIJnLK4eMRxm7LvzeIeJ.LrdB5.Wp0M/0GFaXD6h75OmVjg8CDLa'
+      },
+      body: JSON.stringify(DATA)
+    });
+  } catch(e) {}
   document.getElementById('msg').innerHTML = '<span style="color:#c6f135">✓ Dados restaurados! Redirecionando...</span>';
   setTimeout(function(){ window.location.href='index.html'; }, 1200);
 }
