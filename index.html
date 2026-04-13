@@ -350,10 +350,20 @@ async function syncFromServer() {
     });
     if (!r.ok) return;
     const json = await r.json();
-    const data = json.record;
-    if (data && Object.keys(data).length > 0) {
-      localStorage.setItem('painel_murilo_v3', JSON.stringify(data));
+    const remote = json.record || {};
+
+    const local = loadData();
+    const localTasks = Object.keys(local.tasks || {}).length;
+    const remoteTasks = Object.keys(remote.tasks || {}).length;
+
+    if (remoteTasks > localTasks) {
+      // Nuvem tem mais dados → puxa para cá
+      localStorage.setItem('painel_murilo_v3', JSON.stringify(remote));
+    } else if (localTasks > remoteTasks) {
+      // Local tem mais dados → empurra para nuvem
+      saveToServer(local);
     }
+    // Se igual, não faz nada
   } catch {}
 }
 
